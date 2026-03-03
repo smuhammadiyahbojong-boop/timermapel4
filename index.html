@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ujian Online - 60 Menit</title>
+    <style>
+        /* Desain Halaman */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; overflow: hidden; }
+        
+        /* Header & Timer (Fixed di atas) */
+        #header { position: fixed; top: 0; width: 100%; background: #ffffff; padding: 15px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000; }
+        #timer-container { font-size: 28px; color: #d93025; font-weight: bold; }
+        .warning { color: #5f6368; font-size: 13px; margin-top: 5px; font-weight: normal; }
+        
+        /* Frame Google Form */
+        iframe { width: 100%; height: calc(100vh - 100px); border: none; margin-top: 100px; }
+        
+        /* Layar Pemblokir (Overlay) */
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; text-align: center; padding-top: 15%; }
+        #overlay h1 { color: #d93025; font-size: 40px; margin-bottom: 10px; }
+        #overlay p { font-size: 18px; color: #555; line-height: 1.6; padding: 0 20px; }
+    </style>
+</head>
+<body>
+
+<div id="header">
+    <div id="timer-container">Sisa Waktu: <span id="time">60:00</span></div>
+    <div class="warning">⚠️ DILARANG REFRESH HALAMAN ATAU AKSES AKAN DIBLOKIR OTOMATIS</div>
+</div>
+
+<div id="overlay">
+    <h1 id="status-title">WAKTU HABIS!</h1>
+    <p id="status-message">Sesi ujian Anda telah berakhir.<br>Jawaban yang sudah terkirim akan diproses oleh sistem.</p>
+</div>
+
+<iframe id="googleForm" src="https://docs.google.com/forms/d/e/1FAIpQLSco-G4UGX5nfsLCFW0UWR8P4W8ZOUE5uDh9foQQ-sveIYt6jg/viewform?embedded=true">Memuat…</iframe>
+
+<script>
+    const display = document.querySelector('#time');
+    const overlay = document.querySelector('#overlay');
+    const formFrame = document.querySelector('#googleForm');
+    const statusTitle = document.querySelector('#status-title');
+    const statusMsg = document.querySelector('#status-message');
+
+    // 1. FITUR ANTI-REFRESH
+    // Jika terdeteksi ada tanda ujian sudah berjalan, blokir akses saat dimuat ulang
+    if (sessionStorage.getItem('exam_session_active')) {
+        formFrame.remove();
+        overlay.style.display = 'block';
+        statusTitle.textContent = "AKSES DIBLOKIR!";
+        statusMsg.innerHTML = "Anda terdeteksi melakukan refresh halaman.<br>Demi integritas ujian, Anda tidak dapat melanjutkan pengerjaan di sesi ini.";
+    } else {
+        // Tandai sesi ujian dimulai
+        sessionStorage.setItem('exam_session_active', 'true');
+    }
+
+    // 2. LOGIKA TIMER 60 MENIT
+    var duration = 60 * 60; 
+    var countdown = setInterval(function () {
+        var minutes = parseInt(duration / 60, 10);
+        var seconds = parseInt(duration % 60, 10);
+
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+
+        display.textContent = minutes + ":" + seconds;
+
+        if (--duration < 0) {
+            clearInterval(countdown);
+            formFrame.remove();
+            overlay.style.display = 'block';
+            statusTitle.textContent = "WAKTU HABIS!";
+            statusMsg.innerHTML = "Sesi ujian 60 menit Anda telah berakhir.<br>Terima kasih.";
+        }
+    }, 1000);
+
+    // 3. PERINGATAN BROWSER SEBELUM KELUAR/REFRESH
+    window.onbeforeunload = function() {
+        return "Peringatan: Refresh halaman akan membuat Anda kehilangan akses ujian!";
+    };
+</script>
+
+</body>
+</html>
